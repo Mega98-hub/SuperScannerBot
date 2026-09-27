@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, render_template
 import requests
 import random
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='.')
 
 @app.route('/')
 def home():

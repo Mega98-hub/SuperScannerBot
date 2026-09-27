@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import requests
 import random
 
@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "SuperScannerBot is online and running!"
+    return render_template('index.html')
 
 @app.route('/api/signal', methods=['GET'])
 def get_live_signal():

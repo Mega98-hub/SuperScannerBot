@@ -217,21 +217,21 @@
                 <option value="5M">5 Minutes</option>
             </select>
 
-            <button class="action-btn" onclick="fetchSignal()">Scan Market Live</button>
+            <button class="action-btn" id="scanBtn" onclick="fetchSignal()">Scan Market Live</button>
         </div>
 
         <div class="signal-box" id="signalResultBox" style="display:none;">
-            <h3 style="color: #00ffcc; margin-top:0;">Live Analysis Result</h3>
-            <p><strong>Entry Time:</strong> <span id="resTimestamp" style="color: #00ffcc;">-</span></p>
+            <h3 style="color: #00ffcc; margin-top:0;">Live Trade Analysis</h3>
+            <p><strong>Entry Time:</strong> <span id="resTimestamp">-</span></p>
             <p><strong>Asset:</strong> <span id="resMarket">-</span></p>
             <p><strong>Timeframe:</strong> <span id="resTimeframe">-</span></p>
             <p><strong>Signal:</strong> <span id="resSignal" style="font-size: 18px; font-weight:bold;">-</span></p>
             <p><strong>Confidence:</strong> <span id="resScore">-</span>%</p>
             <p><strong>Pattern:</strong> <span id="resPattern">-</span></p>
-            <p><strong>Live Price:</strong> <span id="resPrice">-</span></p>
+            <p><strong>Entry Price:</strong> <span id="resPrice">-</span></p>
             <hr style="border: 0; border-top: 1px solid #1f293d; margin: 15px 0;">
-            <p><strong>Verified Outcome:</strong> <span id="resOutcome" style="font-size: 18px; font-weight:bold;">-</span></p>
-            <p><strong>Exit Price:</strong> <span id="resExitPrice">-</span></p>
+            <p><strong>Trade Status:</strong> <span id="resOutcome" style="font-size: 16px; font-weight:bold; color: #f59e0b;">Waiting for Expiry...</span></p>
+            <p><strong>Exit Price:</strong> <span id="resExitPrice">Pending...</span></p>
         </div>
     </div>
 
@@ -284,6 +284,10 @@
         function fetchSignal() {
             const market = document.getElementById('marketSelect').value;
             const timeframe = document.getElementById('timeframeSelect').value;
+            const scanBtn = document.getElementById('scanBtn');
+            
+            scanBtn.innerText = "Analyzing Market...";
+            scanBtn.disabled = true;
 
             fetch(`/api/signal?market=${encodeURIComponent(market)}&timeframe=${encodeURIComponent(timeframe)}`)
             .then(res => res.json())
@@ -301,14 +305,44 @@
                 document.getElementById('resPrice').innerText = data.live_price;
                 
                 const outcomeElement = document.getElementById('resOutcome');
-                outcomeElement.innerText = data.outcome;
-                outcomeElement.style.color = data.outcome === 'WIN' ? '#10b981' : '#ef4444';
+                outcomeElement.innerText = "ACTIVE (Waiting for Expiry...)";
+                outcomeElement.style.color = "#f59e0b";
+                document.getElementById('resExitPrice').innerText = "Waiting...";
 
-                document.getElementById('resExitPrice').innerText = data.exit_price;
-                
                 document.getElementById('signalResultBox').style.display = 'block';
+                scanBtn.innerText = "Scan Market Live";
+                scanBtn.disabled = false;
+
+                // Determine timer duration in milliseconds based on selected timeframe
+                let waitTime = 30000; // default 30S
+                if (timeframe === '1M') waitTime = 60000;
+                if (timeframe === '5M') waitTime = 300000;
+
+                // Wait out the timer before evaluating the trade outcome honestly
+                setTimeout(() => {
+                    fetch('/api/evaluate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            entry_price: data.live_price,
+                            signal: data.signal,
+                            market: data.market
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(evalData => {
+                        outcomeElement.innerText = evalData.outcome;
+                        outcomeElement.style.color = evalData.outcome === 'WIN' ? '#10b981' : '#ef4444';
+                        document.getElementById('resExitPrice').innerText = evalData.exit_price;
+                    });
+                }, waitTime);
+
             })
-            .catch(err => alert("Error fetching live signal feed."));
+            .catch(err => {
+                alert("Error fetching live signal feed.");
+                scanBtn.innerText = "Scan Market Live";
+                scanBtn.disabled = false;
+            });
         }
     </script>
 </body>

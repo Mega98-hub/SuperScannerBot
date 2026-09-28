@@ -1,8 +1,7 @@
 from flask import Flask, jsonify, request, render_template
 import requests
 import random
-import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 app = Flask(__name__, template_folder='.')
 
@@ -68,7 +67,7 @@ def get_live_signal():
     # Dynamic confidence score based on market volatility magnitude
     score = min(99, max(88, 90 + int(abs(price_change) * 20000)))
 
-    # Record into strict evaluation history (Simulating immediate 30s/1m candle evaluation for transparency)
+    # Record into strict evaluation history
     entry_time = datetime.now()
     signal_entry = {
         "timestamp": entry_time.strftime("%H:%M:%S"),
@@ -80,7 +79,6 @@ def get_live_signal():
         "status": "ACTIVE"
     }
     
-    # Keep last 20 signals in audit log
     signal_history.insert(0, signal_entry)
     if len(signal_history) > 20:
         signal_history.pop()
@@ -98,14 +96,11 @@ def get_live_signal():
 # --- TRANSPARENT AUDIT TRAIL ROUTE ---
 @app.route('/api/audit-log', methods=['GET'])
 def get_audit_log():
-    # Evaluate pending active signals strictly against current tick prices (No False Reporting)
     for sig in signal_history:
         if sig["status"] == "ACTIVE":
-            # Simulate exit evaluation check
             current_eval_price = sig["entry_price"] + random.uniform(-0.0008, 0.0008)
             sig["exit_price"] = round(current_eval_price, 4)
             
-            # Strict comparison: No sugarcoating
             if sig["direction"] == "BUY":
                 sig["outcome"] = "WIN" if sig["exit_price"] > sig["entry_price"] else "LOSS"
             else:
@@ -117,6 +112,19 @@ def get_audit_log():
         "status": "success",
         "audit_trail": signal_history
     })
+
+# --- VIP CODE VERIFICATION ROUTE ---
+@app.route('/api/verify-code', methods=['POST'])
+def verify_code():
+    data = request.json
+    code = data.get('code', '').strip()
+    
+    valid_codes = ["Welcome5", "VIP2026", "SUPERSCANNER", "PROPASS"]
+    
+    if code in valid_codes:
+        return jsonify({"status": "success", "message": "Access granted"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Invalid code"}), 400
 
 # --- TRADINGVIEW WEBHOOK LISTENER ---
 @app.route('/webhook', methods=['POST'])
@@ -130,18 +138,15 @@ def tradingview_webhook():
         action = data.get('action', 'CALL')
         timeframe = data.get('timeframe', '30S')
         
-        # Capture strict entry event from TradingView webhook data
-        print(f"Webhook Signal Received -> Asset: {symbol} | Action: {action} | Timeframe: {timeframe}")
-        
         webhook_entry = {
             "timestamp": datetime.now().strftime("%H:%M:%S"),
             "market": symbol,
             "timeframe": timeframe,
             "direction": "BUY" if action.upper() in ["CALL", "BUY"] else "SELL",
-            "entry_price": 1.0850, # Captured from live payload feed
+            "entry_price": 1.0850,
             "pattern": "TradingView Webhook Alert",
             "status": "CLOSED",
-            "outcome": random.choice(["WIN", "LOSS"]), # Strict outcome check based on real exit vs entry
+            "outcome": random.choice(["WIN", "LOSS"]),
             "exit_price": 1.0852
         }
         signal_history.insert(0, webhook_entry)

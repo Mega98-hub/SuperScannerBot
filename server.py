@@ -5,10 +5,7 @@ from datetime import datetime
 
 app = Flask(__name__, template_folder='.')
 
-# Store recent price history in memory for real market momentum calculation
 price_history = {}
-
-# Strict audit trail storage for historical outcome verification
 signal_history = []
 
 @app.route('/')
@@ -41,7 +38,6 @@ def get_live_signal():
     except Exception as e:
         live_tick = round(1.0850 + random.uniform(-0.001, 0.001), 4)
 
-    # Track price history for this specific market to determine real momentum
     if market not in price_history:
         price_history[market] = []
     
@@ -50,13 +46,11 @@ def get_live_signal():
     if len(history) > 10:
         history.pop(0)
 
-    # Calculate real market change between ticks
     if len(history) >= 2:
         price_change = history[-1] - history[-2]
     else:
         price_change = 0.0001 
 
-    # Real signal determination based on actual price movement direction
     if price_change >= 0:
         signal_direction = "BUY"
         active_pattern = "Momentum Breakout Cross" if price_change > 0 else "Order Block Mitigation"
@@ -64,19 +58,28 @@ def get_live_signal():
         signal_direction = "SELL"
         active_pattern = "Volume Exhaustion Rejection" if price_change < 0 else "Institutional Liquidity Sweep"
         
-    # Dynamic confidence score based on market volatility magnitude
     score = min(99, max(88, 90 + int(abs(price_change) * 20000)))
 
-    # Record into strict evaluation history
     entry_time = datetime.now()
+    timestamp_str = entry_time.strftime("%H:%M:%S")
+    
+    # Simulate immediate strict evaluation for the audit log trail
+    exit_price = round(live_tick + random.uniform(-0.0008, 0.0008), 4)
+    if signal_direction == "BUY":
+        outcome = "WIN" if exit_price > live_tick else "LOSS"
+    else:
+        outcome = "WIN" if exit_price < live_tick else "LOSS"
+
     signal_entry = {
-        "timestamp": entry_time.strftime("%H:%M:%S"),
+        "timestamp": timestamp_str,
         "market": market,
         "timeframe": timeframe,
         "direction": signal_direction,
         "entry_price": live_tick,
+        "exit_price": exit_price,
         "pattern": active_pattern,
-        "status": "ACTIVE"
+        "outcome": outcome,
+        "status": "CLOSED"
     }
     
     signal_history.insert(0, signal_entry)
@@ -85,48 +88,34 @@ def get_live_signal():
 
     return jsonify({
         "status": "success",
+        "timestamp": timestamp_str,
         "market": market,
         "timeframe": timeframe,
         "signal": signal_direction,
         "score": score,
         "pattern": active_pattern,
-        "live_price": live_tick
+        "live_price": live_tick,
+        "outcome": outcome,
+        "exit_price": exit_price
     })
 
-# --- TRANSPARENT AUDIT TRAIL ROUTE ---
 @app.route('/api/audit-log', methods=['GET'])
 def get_audit_log():
-    for sig in signal_history:
-        if sig["status"] == "ACTIVE":
-            current_eval_price = sig["entry_price"] + random.uniform(-0.0008, 0.0008)
-            sig["exit_price"] = round(current_eval_price, 4)
-            
-            if sig["direction"] == "BUY":
-                sig["outcome"] = "WIN" if sig["exit_price"] > sig["entry_price"] else "LOSS"
-            else:
-                sig["outcome"] = "WIN" if sig["exit_price"] < sig["entry_price"] else "LOSS"
-                
-            sig["status"] = "CLOSED"
-
     return jsonify({
         "status": "success",
         "audit_trail": signal_history
     })
 
-# --- VIP CODE VERIFICATION ROUTE ---
 @app.route('/api/verify-code', methods=['POST'])
 def verify_code():
     data = request.json
     code = data.get('code', '').strip()
-    
     valid_codes = ["Welcome5", "VIP2026", "SUPERSCANNER", "PROPASS"]
-    
     if code in valid_codes:
         return jsonify({"status": "success", "message": "Access granted"}), 200
     else:
         return jsonify({"status": "error", "message": "Invalid code"}), 400
 
-# --- TRADINGVIEW WEBHOOK LISTENER ---
 @app.route('/webhook', methods=['POST'])
 def tradingview_webhook():
     try:
@@ -150,9 +139,7 @@ def tradingview_webhook():
             "exit_price": 1.0852
         }
         signal_history.insert(0, webhook_entry)
-        
-        return jsonify({"status": "success", "message": "Signal received and evaluated strictly"}), 200
-
+        return jsonify({"status": "success", "message": "Signal received"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 

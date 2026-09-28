@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SuperScannerBot - VIP Dashboard</title>
+    <title>SuperScannerBot Access</title>
     <style>
         body {
-            background-color: #121212;
+            background-color: #0b0f19;
             color: #ffffff;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
@@ -16,73 +16,79 @@
             align-items: center;
         }
         h1 {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
             color: #00ffcc;
+            font-size: 24px;
+            margin-bottom: 25px;
             text-align: center;
         }
-        .card {
-            background-color: #1e1e1e;
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 20px;
+        .container {
             width: 100%;
             max-width: 400px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
-        .price-title {
-            font-size: 0.9rem;
-            color: #b0b0b0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .card {
+            background: #131a29;
+            border: 1px solid #1f293d;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .card h2 {
+            font-size: 18px;
+            color: #9ca3af;
+            margin: 0 0 10px 0;
         }
         .price {
-            font-size: 1.8rem;
+            font-size: 28px;
             font-weight: bold;
             color: #ffffff;
-            margin: 10px 0;
+            margin-bottom: 15px;
         }
         ul {
             padding-left: 20px;
-            font-size: 0.85rem;
-            color: #cccccc;
-            margin-bottom: 20px;
+            margin: 0 0 20px 0;
+            color: #d1d5db;
+            font-size: 14px;
         }
         li {
             margin-bottom: 8px;
         }
         .btn-paypal {
             display: block;
+            width: 100%;
             background-color: #0070ba;
             color: white;
             text-align: center;
             padding: 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: bold;
-            font-size: 0.95rem;
+            font-size: 16px;
         }
-        .vip-section {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background-color: #2a2a2a;
+        .vip-section input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            background: #0b0f19;
             color: white;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            font-size: 14px;
         }
         .btn-vip {
+            display: block;
+            width: 100%;
             background-color: #00ffcc;
-            color: #121212;
+            color: #0b0f19;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
             border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
             font-weight: bold;
+            font-size: 16px;
             cursor: pointer;
         }
     </style>
@@ -91,25 +97,51 @@
 
     <h1>SuperScannerBot Access</h1>
 
-    <!-- 3 Months Access Card -->
-    <div class="card">
-        <div class="price-title">3 Months Access</div>
-        <div class="price">$145 / 3mo</div>
-        <ul>
-            <li>Permanent VIP Dashboard Access</li>
-            <li>All Future Software Updates</li>
-            <li>Unlimited Signal Generation</li>
-            <li>VIP Priority Support</li>
-        </ul>
-        <a href="https://www.paypal.com" target="_blank" class="btn-paypal">Pay with PayPal</a>
-    </div>
+    <div class="container">
+        <!-- Monthly Tier -->
+        <div class="card">
+            <h2>MONTHLY ACCESS</h2>
+            <div class="price">$65 / mo</div>
+            <ul>
+                <li>Full VIP Dashboard Access</li>
+                <li>Live Market Signal Generator</li>
+                <li>Standard Support</li>
+            </ul>
+            <a href="https://www.paypal.com" target="_blank" class="btn-paypal">Pay with PayPal</a>
+        </div>
 
-    <!-- VIP Code Entry Card -->
-    <div class="card">
-        <div class="price-title">Have a VIP Code?</div>
-        <div class="vip-section">
+        <!-- 3 Months Tier -->
+        <div class="card">
+            <h2>3 MONTHS ACCESS</h2>
+            <div class="price">$145 / 3mo</div>
+            <ul>
+                <li>Permanent VIP Dashboard Access</li>
+                <li>All Future Software Updates</li>
+                <li>Unlimited Signal Generation</li>
+                <li>VIP Priority Support</li>
+            </ul>
+            <a href="https://www.paypal.com" target="_blank" class="btn-paypal">Pay with PayPal</a>
+        </div>
+
+        <!-- Lifetime Tier -->
+        <div class="card">
+            <h2>LIFETIME VIP</h2>
+            <div class="price">$299 / Lifetime</div>
+            <ul>
+                <li>Lifetime Unlimited Access</li>
+                <li>All Advanced Bot Engines</li>
+                <li>Direct Developer Support</li>
+            </ul>
+            <a href="https://www.paypal.com" target="_blank" class="btn-paypal">Pay with PayPal</a>
+        </div>
+
+        <!-- VIP Code Section -->
+        <div class="card vip-section">
+            <h2>HAVE A VIP CODE?</h2>
             <input type="text" placeholder="Enter VIP Code (e.g. Welco...)">
             <button class="btn-vip">Access Bot</button>
         </div>
     </div>
 
+</body>
+</html>

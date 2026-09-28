@@ -57,5 +57,24 @@ def get_live_signal():
         "live_price": live_tick
     })
 
+# --- TRADINGVIEW WEBHOOK LISTENER ---
+@app.route('/webhook', methods=['POST'])
+def tradingview_webhook():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"status": "error", "message": "No data received"}), 400
+            
+        symbol = data.get('symbol', 'UNKNOWN')
+        action = data.get('action', 'UNKNOWN')
+        timeframe = data.get('timeframe', '5M')
+        
+        print(f"Signal Received -> Asset: {symbol} | Action: {action} | Timeframe: {timeframe}")
+        
+        return jsonify({"status": "success", "message": "Signal received"}), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

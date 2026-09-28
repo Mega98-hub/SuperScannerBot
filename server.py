@@ -4,6 +4,9 @@ import random
 
 app = Flask(__name__, template_folder='.')
 
+# Store recent price history in memory for real market momentum calculation
+price_history = {}
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -34,18 +37,31 @@ def get_live_signal():
     except Exception as e:
         live_tick = round(1.0850 + random.uniform(-0.001, 0.001), 4)
 
-    is_buy = random.choice([True, False])
-    signal_direction = "BUY" if is_buy else "SELL"
-    score = random.randint(92, 99)
+    # Track price history for this specific market to determine real momentum
+    if market not in price_history:
+        price_history[market] = []
     
-    patterns = [
-        "Volume Exhaustion Rejection", 
-        "Institutional Liquidity Sweep", 
-        "Order Block Mitigation", 
-        "Fibonacci 0.618 Golden Zone", 
-        "Momentum Breakout Cross"
-    ]
-    active_pattern = random.choice(patterns)
+    history = price_history[market]
+    history.append(live_tick)
+    if len(history) > 10:
+        history.pop(0)
+
+    # Calculate real market change between ticks
+    if len(history) >= 2:
+        price_change = history[-1] - history[-2]
+    else:
+        price_change = 0.0001 
+
+    # Real signal determination based on actual price movement direction
+    if price_change >= 0:
+        signal_direction = "BUY"
+        active_pattern = "Momentum Breakout Cross" if price_change > 0 else "Order Block Mitigation"
+    else:
+        signal_direction = "SELL"
+        active_pattern = "Volume Exhaustion Rejection" if price_change < 0 else "Institutional Liquidity Sweep"
+        
+    # Dynamic confidence score based on market volatility magnitude
+    score = min(99, max(88, 90 + int(abs(price_change) * 20000)))
 
     return jsonify({
         "status": "success",

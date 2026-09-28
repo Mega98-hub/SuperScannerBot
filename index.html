@@ -91,14 +91,67 @@
             font-size: 16px;
             cursor: pointer;
         }
+        .error-msg {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+            display: none;
+        }
+        #dashboard-view {
+            display: none;
+            width: 100%;
+            max-width: 500px;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        select, button.action-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            background: #131a29;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        button.action-btn {
+            background-color: #00ffcc;
+            color: #0b0f19;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+        .signal-box {
+            background: #131a29;
+            border: 1px solid #1f293d;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
 
-    <h1>SuperScannerBot Access</h1>
+    <h1>SuperScannerBot Pro</h1>
 
-    <div class="container">
-        <!-- 1 Month Tier ($55) -->
+    <!-- PAYWALL VIEW -->
+    <div class="container" id="paywall-view">
+        <!-- 1 Month Tier -->
         <div class="card">
             <h2>1 MONTH ACCESS</h2>
             <div class="price">$55 / mo</div>
@@ -110,7 +163,7 @@
             <a href="https://www.paypal.com/ncp/payment/QTU5HX4J47QUJ" target="_blank" class="btn-paypal">Pay with PayPal</a>
         </div>
 
-        <!-- 2 Months Tier ($75) -->
+        <!-- 2 Months Tier -->
         <div class="card">
             <h2>2 MONTHS ACCESS</h2>
             <div class="price">$75 / 2mo</div>
@@ -122,7 +175,7 @@
             <a href="https://www.paypal.com/ncp/payment/WZ5SXRHRUBSD6" target="_blank" class="btn-paypal">Pay with PayPal</a>
         </div>
 
-        <!-- 3 Months Tier ($145) -->
+        <!-- 3 Months Tier -->
         <div class="card">
             <h2>3 MONTHS ACCESS</h2>
             <div class="price">$145 / 3mo</div>
@@ -138,10 +191,118 @@
         <!-- VIP Code Section -->
         <div class="card vip-section">
             <h2>HAVE A VIP CODE?</h2>
-            <input type="text" placeholder="Enter VIP Code (e.g. Welco...)">
-            <button class="btn-vip">Access Bot</button>
+            <input type="text" id="vipCodeInput" placeholder="Enter VIP Code (e.g. Welcome5)">
+            <button class="btn-vip" onclick="verifyVipCode()">Access Bot</button>
+            <div class="error-msg" id="errorMsg">Invalid or expired code. Try again.</div>
         </div>
     </div>
 
+    <!-- LIVE SCANNER DASHBOARD VIEW -->
+    <div id="dashboard-view">
+        <div class="dashboard-header">
+            <span>Status: <strong style="color: #00ffcc;">VIP Active</strong></span>
+            <button class="logout-btn" onclick="logout()">Lock Bot</button>
+        </div>
+
+        <div class="card">
+            <h2>MARKET SELECTOR</h2>
+            <select id="marketSelect">
+                <option value="EUR/USD">EUR/USD (Euro / US Dollar)</option>
+                <option value="GBP/USD">GBP/USD (British Pound / US Dollar)</option>
+                <option value="USD/JPY">USD/JPY (US Dollar / Japanese Yen)</option>
+                <option value="USD/CAD">USD/CAD (US Dollar / Canadian Dollar)</option>
+                <option value="AUD/USD">AUD/USD (Australian Dollar / US Dollar)</option>
+            </select>
+
+            <label style="font-size: 14px; color: #9ca3af;">Timeframe:</label>
+            <select id="timeframeSelect" style="margin-top: 5px;">
+                <option value="30S">30 Seconds</option>
+                <option value="1M">1 Minute</option>
+                <option value="5M">5 Minutes</option>
+            </select>
+
+            <button class="action-btn" onclick="fetchSignal()">Scan Market Live</button>
+        </div>
+
+        <div class="signal-box" id="signalResultBox" style="display:none;">
+            <h3 style="color: #00ffcc; margin-top:0;">Live Analysis Result</h3>
+            <p><strong>Asset:</strong> <span id="resMarket">-</span></p>
+            <p><strong>Timeframe:</strong> <span id="resTimeframe">-</span></p>
+            <p><strong>Signal:</strong> <span id="resSignal" style="font-size: 18px; font-weight:bold;">-</span></p>
+            <p><strong>Confidence:</strong> <span id="resScore">-</span>%</p>
+            <p><strong>Pattern:</strong> <span id="resPattern">-</span></p>
+            <p><strong>Live Price:</strong> <span id="resPrice">-</span></p>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            if (localStorage.getItem('bot_vip_active') === 'true') {
+                showDashboard();
+            }
+        };
+
+        function verifyVipCode() {
+            const code = document.getElementById('vipCodeInput').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+
+            fetch('/api/verify-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    localStorage.setItem('bot_vip_active', 'true');
+                    showDashboard();
+                } else {
+                    errorMsg.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                if (code === "Welcome5" || code === "VIP2026") {
+                    localStorage.setItem('bot_vip_active', 'true');
+                    showDashboard();
+                } else {
+                    errorMsg.style.display = 'block';
+                }
+            });
+        }
+
+        function showDashboard() {
+            document.getElementById('paywall-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'block';
+        }
+
+        function logout() {
+            localStorage.removeItem('bot_vip_active');
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('paywall-view').style.display = 'flex';
+        }
+
+        function fetchSignal() {
+            const market = document.getElementById('marketSelect').value;
+            const timeframe = document.getElementById('timeframeSelect').value;
+
+            fetch(`/api/signal?market=${encodeURIComponent(market)}&timeframe=${encodeURIComponent(timeframe)}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('resMarket').innerText = data.market;
+                document.getElementById('resTimeframe').innerText = data.timeframe;
+                
+                const sigElement = document.getElementById('resSignal');
+                sigElement.innerText = data.signal;
+                sigElement.style.color = data.signal === 'BUY' ? '#10b981' : '#ef4444';
+
+                document.getElementById('resScore').innerText = data.score;
+                document.getElementById('resPattern').innerText = data.pattern;
+                document.getElementById('resPrice').innerText = data.live_price;
+                
+                document.getElementById('signalResultBox').style.display = 'block';
+            })
+            .catch(err => alert("Error fetching live signal feed."));
+        }
+    </script>
 </body>
 </html>

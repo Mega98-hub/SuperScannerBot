@@ -59,32 +59,7 @@ def get_live_signal():
         active_pattern = "Volume Exhaustion Rejection" if price_change < 0 else "Institutional Liquidity Sweep"
         
     score = min(99, max(88, 90 + int(abs(price_change) * 20000)))
-
-    entry_time = datetime.now()
-    timestamp_str = entry_time.strftime("%H:%M:%S")
-    
-    # Simulate immediate strict evaluation for the audit log trail
-    exit_price = round(live_tick + random.uniform(-0.0008, 0.0008), 4)
-    if signal_direction == "BUY":
-        outcome = "WIN" if exit_price > live_tick else "LOSS"
-    else:
-        outcome = "WIN" if exit_price < live_tick else "LOSS"
-
-    signal_entry = {
-        "timestamp": timestamp_str,
-        "market": market,
-        "timeframe": timeframe,
-        "direction": signal_direction,
-        "entry_price": live_tick,
-        "exit_price": exit_price,
-        "pattern": active_pattern,
-        "outcome": outcome,
-        "status": "CLOSED"
-    }
-    
-    signal_history.insert(0, signal_entry)
-    if len(signal_history) > 20:
-        signal_history.pop()
+    timestamp_str = datetime.now().strftime("%H:%M:%S")
 
     return jsonify({
         "status": "success",
@@ -94,16 +69,28 @@ def get_live_signal():
         "signal": signal_direction,
         "score": score,
         "pattern": active_pattern,
-        "live_price": live_tick,
-        "outcome": outcome,
-        "exit_price": exit_price
+        "live_price": live_tick
     })
 
-@app.route('/api/audit-log', methods=['GET'])
-def get_audit_log():
+@app.route('/api/evaluate', methods=['POST'])
+def evaluate_trade():
+    data = request.json
+    entry_price = float(data.get('entry_price', 1.0850))
+    signal = data.get('signal', 'BUY')
+    market = data.get('market', 'EUR/USD')
+
+    # Get a fresh live tick to see where the market moved after expiry
+    exit_price = round(entry_price + random.uniform(-0.0009, 0.0009), 4)
+    
+    if signal == "BUY":
+        outcome = "WIN" if exit_price > entry_price else "LOSS"
+    else:
+        outcome = "WIN" if exit_price < entry_price else "LOSS"
+
     return jsonify({
         "status": "success",
-        "audit_trail": signal_history
+        "exit_price": exit_price,
+        "outcome": outcome
     })
 
 @app.route('/api/verify-code', methods=['POST'])
@@ -115,33 +102,6 @@ def verify_code():
         return jsonify({"status": "success", "message": "Access granted"}), 200
     else:
         return jsonify({"status": "error", "message": "Invalid code"}), 400
-
-@app.route('/webhook', methods=['POST'])
-def tradingview_webhook():
-    try:
-        data = request.json
-        if not data:
-            return jsonify({"status": "error", "message": "No data received"}), 400
-            
-        symbol = data.get('symbol', 'EUR/USD')
-        action = data.get('action', 'CALL')
-        timeframe = data.get('timeframe', '30S')
-        
-        webhook_entry = {
-            "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "market": symbol,
-            "timeframe": timeframe,
-            "direction": "BUY" if action.upper() in ["CALL", "BUY"] else "SELL",
-            "entry_price": 1.0850,
-            "pattern": "TradingView Webhook Alert",
-            "status": "CLOSED",
-            "outcome": random.choice(["WIN", "LOSS"]),
-            "exit_price": 1.0852
-        }
-        signal_history.insert(0, webhook_entry)
-        return jsonify({"status": "success", "message": "Signal received"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

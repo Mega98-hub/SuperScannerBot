@@ -151,7 +151,6 @@
 
     <!-- PAYWALL VIEW -->
     <div class="container" id="paywall-view">
-        <!-- 1 Month Tier -->
         <div class="card">
             <h2>1 MONTH ACCESS</h2>
             <div class="price">$55 / mo</div>
@@ -163,7 +162,6 @@
             <a href="https://www.paypal.com/ncp/payment/QTU5HX4J47QUJ" target="_blank" class="btn-paypal">Pay with PayPal</a>
         </div>
 
-        <!-- 2 Months Tier -->
         <div class="card">
             <h2>2 MONTHS ACCESS</h2>
             <div class="price">$75 / 2mo</div>
@@ -175,7 +173,6 @@
             <a href="https://www.paypal.com/ncp/payment/WZ5SXRHRUBSD6" target="_blank" class="btn-paypal">Pay with PayPal</a>
         </div>
 
-        <!-- 3 Months Tier -->
         <div class="card">
             <h2>3 MONTHS ACCESS</h2>
             <div class="price">$145 / 3mo</div>
@@ -188,7 +185,6 @@
             <a href="https://www.paypal.com/ncp/payment/KYTVHTKS9AJ9N" target="_blank" class="btn-paypal">Pay with PayPal</a>
         </div>
 
-        <!-- VIP Code Section -->
         <div class="card vip-section">
             <h2>HAVE A VIP CODE?</h2>
             <input type="text" id="vipCodeInput" placeholder="Enter VIP Code (e.g. Welcome5)">
@@ -226,12 +222,16 @@
 
         <div class="signal-box" id="signalResultBox" style="display:none;">
             <h3 style="color: #00ffcc; margin-top:0;">Live Analysis Result</h3>
+            <p><strong>Entry Time:</strong> <span id="resTimestamp" style="color: #00ffcc;">-</span></p>
             <p><strong>Asset:</strong> <span id="resMarket">-</span></p>
             <p><strong>Timeframe:</strong> <span id="resTimeframe">-</span></p>
             <p><strong>Signal:</strong> <span id="resSignal" style="font-size: 18px; font-weight:bold;">-</span></p>
             <p><strong>Confidence:</strong> <span id="resScore">-</span>%</p>
             <p><strong>Pattern:</strong> <span id="resPattern">-</span></p>
             <p><strong>Live Price:</strong> <span id="resPrice">-</span></p>
+            <hr style="border: 0; border-top: 1px solid #1f293d; margin: 15px 0;">
+            <p><strong>Verified Outcome:</strong> <span id="resOutcome" style="font-size: 18px; font-weight:bold;">-</span></p>
+            <p><strong>Exit Price:</strong> <span id="resExitPrice">-</span></p>
         </div>
     </div>
 
@@ -288,6 +288,7 @@
             fetch(`/api/signal?market=${encodeURIComponent(market)}&timeframe=${encodeURIComponent(timeframe)}`)
             .then(res => res.json())
             .then(data => {
+                document.getElementById('resTimestamp').innerText = data.timestamp;
                 document.getElementById('resMarket').innerText = data.market;
                 document.getElementById('resTimeframe').innerText = data.timeframe;
                 
@@ -298,6 +299,12 @@
                 document.getElementById('resScore').innerText = data.score;
                 document.getElementById('resPattern').innerText = data.pattern;
                 document.getElementById('resPrice').innerText = data.live_price;
+                
+                const outcomeElement = document.getElementById('resOutcome');
+                outcomeElement.innerText = data.outcome;
+                outcomeElement.style.color = data.outcome === 'WIN' ? '#10b981' : '#ef4444';
+
+                document.getElementById('resExitPrice').innerText = data.exit_price;
                 
                 document.getElementById('signalResultBox').style.display = 'block';
             })

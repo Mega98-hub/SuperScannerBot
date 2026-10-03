@@ -97,7 +97,7 @@ def evaluate_trade():
 def verify_code():
     data = request.json
     code = data.get('code', '').strip()
-    valid_codes = ["Welcome5", "VIP2026", "SUPERSCANNER", "PROPASS"]
+    valid_codes = ["legendary5"]
     if code in valid_codes:
         return jsonify({"status": "success", "message": "Access granted"}), 200
     else:

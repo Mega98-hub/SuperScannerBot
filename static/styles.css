@@ -1,0 +1,187 @@
+/* Controls Row (Market & Timeframe Dropdowns) */
+.controls-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.select-control {
+    flex: 1;
+    background-color: #121212;
+    color: #FFFFFF;
+    border: 1px solid #37474F;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.prep-alert {
+    background-color: #263238;
+    border-left: 4px solid #29B6F6;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.prep-header {
+    font-size: 0.8rem;
+    color: #81D4FA;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.entry-timestamp {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #FFFFFF;
+}
+
+.signal-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.signal-direction {
+    font-size: 2.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #66BB6A;
+}
+
+.signal-direction.sell {
+    color: #EF5350;
+}
+
+.confidence-meter {
+    text-align: right;
+}
+
+.score-display {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.score-max {
+    font-size: 0.75rem;
+    color: #78909C;
+}
+
+.pattern-label {
+    font-size: 0.75rem;
+    color: #B0BEC5;
+    margin-top: 2px;
+}
+
+.meter-bar {
+    height: 5px;
+    background-color: #2C2C2C;
+    border-radius: 3px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.fill-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #29B6F6, #03A9F4);
+    width: 0%;
+}
+
+.scan-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #0277BD;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.scan-button:hover {
+    background-color: #039BE5;
+}
+
+.session-stats {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #2C2C2C;
+    font-size: 0.75rem;
+    color: #78909C;
+    display: flex;
+    justify-content: space-around;
+}
+
+.stat-box {
+    text-align: center;
+}
+
+.stat-val {
+    display: block;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #FFFFFF;
+}
+
+.stat-val.win { color: #66BB6A; }
+.stat-val.loss { color: #EF5350; }
+
+.admin-btn {
+    background-color: #37474F;
+    color: #FFFFFF;
+    border: none;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.admin-btn:hover {
+    background-color: #455A64;
+}
+
+.admin-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.admin-content {
+    background-color: #1E1E1E;
+    border: 1px solid #2C2C2C;
+    border-radius: 12px;
+    width: 400px;
+    padding: 25px;
+    color: #FFFFFF;
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.6);
+}
+
+.admin-content h2 {
+    margin-top: 0;
+    font-size: 1.3rem;
+    color: #29B6F6;
+}
+
+.admin-content p {
+    color: #B0BEC5;
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+}
+
+.sub-list {
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+}

@@ -23,16 +23,27 @@ def get_live_signal():
         rates = data.get('rates', {})
         
         base_price = 1.0850
-        if 'EUR' in market:
+        # Expanded pairs support (Standard & OTC assets)
+        if 'EUR/USD' in market:
             base_price = rates.get('EUR', 0.92)
-        elif 'GBP' in market:
+        elif 'GBP/USD' in market:
             base_price = 1.0 / rates.get('GBP', 0.79)
-        elif 'JPY' in market:
+        elif 'USD/JPY' in market:
             base_price = rates.get('JPY', 150.0)
-        elif 'CAD' in market:
+        elif 'USD/CAD' in market:
             base_price = rates.get('CAD', 1.35)
-        elif 'AUD' in market:
+        elif 'AUD/USD' in market:
             base_price = 1.0 / rates.get('AUD', 1.50)
+        elif 'EUR/GBP' in market:
+            base_price = 0.85
+        elif 'NZD/USD' in market:
+            base_price = 0.60
+        elif 'USD/CHF' in market:
+            base_price = 0.89
+        elif 'EUR/JPY' in market:
+            base_price = 162.00
+        elif 'GBP/JPY' in market:
+            base_price = 190.00
             
         live_tick = round(base_price + random.uniform(-0.0005, 0.0005), 4)
     except Exception as e:

@@ -3,7 +3,7 @@ import requests
 import random
 from datetime import datetime
 
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__)
 
 price_history = {}
 signal_history = []

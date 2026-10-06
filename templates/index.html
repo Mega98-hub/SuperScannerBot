@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SuperScannerBot Access</title>
+    <title>SuperScannerBot Pro</title>
     <style>
         body {
             background-color: #0b0f19;
@@ -187,7 +187,7 @@
 
         <div class="card vip-section">
             <h2>HAVE A VIP CODE?</h2>
-            <input type="text" id="vipCodeInput" placeholder="Enter VIP Code (e.g. Welcome5)">
+            <input type="text" id="vipCodeInput" placeholder="Enter VIP Code (e.g. legendary5)">
             <button class="btn-vip" onclick="verifyVipCode()">Access Bot</button>
             <div class="error-msg" id="errorMsg">Invalid or expired code. Try again.</div>
         </div>
@@ -203,18 +203,40 @@
         <div class="card">
             <h2>MARKET SELECTOR</h2>
             <select id="marketSelect">
-                <option value="EUR/USD">EUR/USD (Euro / US Dollar)</option>
-                <option value="GBP/USD">GBP/USD (British Pound / US Dollar)</option>
-                <option value="USD/JPY">USD/JPY (US Dollar / Japanese Yen)</option>
-                <option value="USD/CAD">USD/CAD (US Dollar / Canadian Dollar)</option>
-                <option value="AUD/USD">AUD/USD (Australian Dollar / US Dollar)</option>
+                <optgroup label="Standard Forex Pairs">
+                    <option value="EUR/USD">EUR/USD (Euro / US Dollar)</option>
+                    <option value="GBP/USD">GBP/USD (British Pound / US Dollar)</option>
+                    <option value="USD/JPY">USD/JPY (US Dollar / Japanese Yen)</option>
+                    <option value="USD/CAD">USD/CAD (US Dollar / Canadian Dollar)</option>
+                    <option value="AUD/USD">AUD/USD (Australian Dollar / US Dollar)</option>
+                    <option value="EUR/GBP">EUR/GBP (Euro / British Pound)</option>
+                    <option value="NZD/USD">NZD/USD (New Zealand Dollar / US Dollar)</option>
+                    <option value="USD/CHF">USD/CHF (US Dollar / Swiss Franc)</option>
+                    <option value="EUR/JPY">EUR/JPY (Euro / Japanese Yen)</option>
+                    <option value="GBP/JPY">GBP/JPY (British Pound / Japanese Yen)</option>
+                </optgroup>
+                <optgroup label="OTC Asset Pairs">
+                    <option value="EUR/USD-OTC">EUR/USD (OTC)</option>
+                    <option value="GBP/USD-OTC">GBP/USD (OTC)</option>
+                    <option value="USD/JPY-OTC">USD/JPY (OTC)</option>
+                    <option value="EUR/JPY-OTC">EUR/JPY (OTC)</option>
+                </optgroup>
             </select>
 
-            <label style="font-size: 14px; color: #9ca3af;">Timeframe:</label>
+            <label style="font-size: 14px; color: #9ca3af;">Timeframe (Pocket Option):</label>
             <select id="timeframeSelect" style="margin-top: 5px;">
-                <option value="30S">30 Seconds</option>
-                <option value="1M">1 Minute</option>
-                <option value="5M">5 Minutes</option>
+                <option value="S3">3 Seconds (S3)</option>
+                <option value="S5">5 Seconds (S5)</option>
+                <option value="S10">10 Seconds (S10)</option>
+                <option value="S15">15 Seconds (S15)</option>
+                <option value="S30">30 Seconds (S30)</option>
+                <option value="1M" selected>1 Minute (1M)</option>
+                <option value="2M">2 Minutes (2M)</option>
+                <option value="5M">5 Minutes (5M)</option>
+                <option value="15M">15 Minutes (15M)</option>
+                <option value="30M">30 Minutes (30M)</option>
+                <option value="H1">1 Hour (H1)</option>
+                <option value="H4">4 Hours (H4)</option>
             </select>
 
             <button class="action-btn" id="scanBtn" onclick="fetchSignal()">Scan Market Live</button>
@@ -261,7 +283,7 @@
                 }
             })
             .catch(err => {
-                if (code === "Welcome5" || code === "VIP2026") {
+                if (code === "legendary5") {
                     localStorage.setItem('bot_vip_active', 'true');
                     showDashboard();
                 } else {
@@ -313,9 +335,15 @@
                 scanBtn.innerText = "Scan Market Live";
                 scanBtn.disabled = false;
 
-                let waitTime = 30000;
-                if (timeframe === '1M') waitTime = 60000;
-                if (timeframe === '5M') waitTime = 300000;
+                // Dynamic wait time handling based on timeframe selection
+                let waitTime = 5000; // default for S3/S5
+                if (timeframe === 'S10') waitTime = 10000;
+                else if (timeframe === 'S15') waitTime = 15000;
+                else if (timeframe === 'S30') waitTime = 30000;
+                else if (timeframe === '1M') waitTime = 60000;
+                else if (timeframe === '2M') waitTime = 120000;
+                else if (timeframe === '5M') waitTime = 300000;
+                else if (timeframe === '15M' || timeframe === '30M' || timeframe === 'H1' || timeframe === 'H4') waitTime = 10000; // Fast-track simulation for long timeframes
 
                 setTimeout(() => {
                     fetch('/api/evaluate', {

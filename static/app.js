@@ -16,16 +16,69 @@ let wins = 0;
 let losses = 0;
 let isLockedDown = false;
 
+// CHECK EXPIRATION & SESSION ON PAGE LOAD
 window.onload = function() {
-    if (localStorage.getItem('bot_vip_active') === 'true') {
-        showDashboard();
-    }
+    checkSubscriptionStatus();
 };
+
+function checkSubscriptionStatus() {
+    const isVip = localStorage.getItem('bot_vip_active');
+    const role = localStorage.getItem('bot_user_role');
+    const expiry = localStorage.getItem('bot_vip_expiry');
+
+    if (isVip === 'true') {
+        // Owner has unlimited access
+        if (role === 'owner') {
+            showDashboard(true);
+            return;
+        }
+
+        // Regular subscriber: Check if expiration time has passed
+        if (expiry) {
+            const now = new Date().getTime();
+            if (now >= parseInt(expiry)) {
+                alert("Your subscription plan has expired. Please renew your plan to continue.");
+                logout();
+                return;
+            }
+        }
+
+        showDashboard(false);
+    }
+}
 
 function verifyVipCode() {
     const code = document.getElementById('vipCodeInput').value.trim();
     const errorMsg = document.getElementById('errorMsg');
+    if (errorMsg) errorMsg.style.display = 'none';
 
+    // 1. OWNER LOGIN (Permanent Owner Access + Subscriber Management Panel)
+    if (code === "legendary5") {
+        localStorage.setItem('bot_vip_active', 'true');
+        localStorage.setItem('bot_user_role', 'owner');
+        localStorage.removeItem('bot_vip_expiry'); // Owner never expires
+        showDashboard(true);
+        return;
+    }
+
+    // 2. DEMO / SUBSCRIBER KEYS (30-Day Plan Verification)
+    // You can generate custom subscriber keys like SUB30-8921 below
+    if (code.startsWith("SUB30-") || code.startsWith("SUB60-") || code.startsWith("SUB90-")) {
+        let days = 30;
+        if (code.startsWith("SUB60-")) days = 60;
+        if (code.startsWith("SUB90-")) days = 90;
+
+        const expirationTime = new Date().getTime() + (days * 24 * 60 * 60 * 1000);
+
+        localStorage.setItem('bot_vip_active', 'true');
+        localStorage.setItem('bot_user_role', 'subscriber');
+        localStorage.setItem('bot_vip_expiry', expirationTime.toString());
+        
+        showDashboard(false);
+        return;
+    }
+
+    // Server verification API fallback
     fetch('/api/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,68 +87,98 @@ function verifyVipCode() {
     .then(res => res.json())
     .then(data => {
         if (data.status === 'success') {
+            const days = data.days || 30;
+            const expirationTime = new Date().getTime() + (days * 24 * 60 * 60 * 1000);
             localStorage.setItem('bot_vip_active', 'true');
-            showDashboard();
+            localStorage.setItem('bot_user_role', 'subscriber');
+            localStorage.setItem('bot_vip_expiry', expirationTime.toString());
+            showDashboard(false);
         } else {
-            errorMsg.style.display = 'block';
+            if (errorMsg) errorMsg.style.display = 'block';
         }
     })
     .catch(err => {
-        if (code === "legendary5") {
-            localStorage.setItem('bot_vip_active', 'true');
-            showDashboard();
-        } else {
-            errorMsg.style.display = 'block';
-        }
+        if (errorMsg) errorMsg.style.display = 'block';
     });
 }
 
-function showDashboard() {
-    document.getElementById('paywall-view').style.display = 'none';
-    document.getElementById('dashboard-view').style.display = 'block';
+function showDashboard(isOwner = false) {
+    const paywallView = document.getElementById('paywall-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const adminPanel = document.getElementById('adminPanel');
+
+    if (paywallView) paywallView.style.display = 'none';
+    if (dashboardView) dashboardView.style.display = 'block';
+
+    // Show Subscriber Management Panel ONLY if logged in as Owner
+    if (adminPanel) {
+        adminPanel.style.display = isOwner ? 'block' : 'none';
+    }
 }
 
 function logout() {
     localStorage.removeItem('bot_vip_active');
-    document.getElementById('dashboard-view').style.display = 'none';
-    document.getElementById('paywall-view').style.display = 'flex';
+    localStorage.removeItem('bot_user_role');
+    localStorage.removeItem('bot_vip_expiry');
+
+    const paywallView = document.getElementById('paywall-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const adminPanel = document.getElementById('adminPanel');
+
+    if (dashboardView) dashboardView.style.display = 'none';
+    if (adminPanel) adminPanel.style.display = 'none';
+    if (paywallView) paywallView.style.display = 'flex';
 }
 
 async function fetchSignal() {
+    // Re-check expiration before every scan attempt
+    checkSubscriptionStatus();
+    if (localStorage.getItem('bot_vip_active') !== 'true') return;
+
     if (isLockedDown) return;
     isLockedDown = true;
-    marketSelect.disabled = true;
-    timeframeSelect.disabled = true;
+    if (marketSelect) marketSelect.disabled = true;
+    if (timeframeSelect) timeframeSelect.disabled = true;
 
-    const market = marketSelect.value;
-    const timeframe = timeframeSelect.value;
+    const market = marketSelect ? marketSelect.value : 'EUR/USD';
+    const timeframe = timeframeSelect ? timeframeSelect.value : '1M';
     
-    scanButton.innerText = "Analyzing Market...";
-    scanButton.style.backgroundColor = "#374151";
+    if (scanButton) {
+        scanButton.innerText = "Analyzing Market...";
+        scanButton.style.backgroundColor = "#374151";
+    }
 
     fetch(`/api/signal?market=${encodeURIComponent(market)}&timeframe=${encodeURIComponent(timeframe)}`)
     .then(res => res.json())
     .then(async data => {
-        entryTimeDisplay.innerText = data.timestamp;
-        document.getElementById('resMarket').innerText = data.market;
-        document.getElementById('resTimeframe').innerText = data.timeframe;
+        if (entryTimeDisplay) entryTimeDisplay.innerText = data.timestamp;
+        const resMarket = document.getElementById('resMarket');
+        const resTimeframe = document.getElementById('resTimeframe');
+        if (resMarket) resMarket.innerText = data.market;
+        if (resTimeframe) resTimeframe.innerText = data.timeframe;
         
-        signalDirection.innerText = data.signal;
-        signalDirection.style.color = data.signal === 'BUY' ? '#10b981' : '#ef4444';
+        if (signalDirection) {
+            signalDirection.innerText = data.signal;
+            signalDirection.style.color = data.signal === 'BUY' ? '#10b981' : '#ef4444';
+        }
 
-        scoreNumber.innerText = data.score;
-        patternLabel.innerText = data.pattern;
-        document.getElementById('resPrice').innerText = data.live_price;
+        if (scoreNumber) scoreNumber.innerText = data.score;
+        if (patternLabel) patternLabel.innerText = data.pattern;
+        const resPrice = document.getElementById('resPrice');
+        if (resPrice) resPrice.innerText = data.live_price;
         
         const outcomeElement = document.getElementById('resOutcome');
-        outcomeElement.innerText = "ACTIVE (Waiting for Expiry...)";
-        outcomeElement.style.color = "#f59e0b";
-        document.getElementById('resExitPrice').innerText = "Waiting...";
+        if (outcomeElement) {
+            outcomeElement.innerText = "ACTIVE (Waiting for Expiry...)";
+            outcomeElement.style.color = "#f59e0b";
+        }
+        const resExitPrice = document.getElementById('resExitPrice');
+        if (resExitPrice) resExitPrice.innerText = "Waiting...";
 
-        document.getElementById('signalResultBox').style.display = 'block';
-        fillBar.style.width = "100%";
+        const signalResultBox = document.getElementById('signalResultBox');
+        if (signalResultBox) signalResultBox.style.display = 'block';
+        if (fillBar) fillBar.style.width = "100%";
 
-        // Determine wait time based on timeframe (S3 to H4 support)
         let waitTime = 5000;
         if (timeframe === 'S10') waitTime = 10000;
         else if (timeframe === 'S15') waitTime = 15000;
@@ -112,35 +195,39 @@ async function fetchSignal() {
     })
     .catch(err => {
         alert("Error fetching live signal feed.");
-        scanButton.innerText = "SCAN MARKET";
-        scanButton.style.backgroundColor = "#0277BD";
+        if (scanButton) {
+            scanButton.innerText = "SCAN MARKET";
+            scanButton.style.backgroundColor = "#0277BD";
+        }
         isLockedDown = false;
-        marketSelect.disabled = false;
-        timeframeSelect.disabled = false;
+        if (marketSelect) marketSelect.disabled = false;
+        if (timeframeSelect) timeframeSelect.disabled = false;
     });
 }
 
 async function finalizeTradeOutcome(isBuySignal) {
-    let exitPrice = await fetchLiveMarketPrice(marketSelect.value);
+    let exitPrice = await fetchLiveMarketPrice(marketSelect ? marketSelect.value : 'EUR/USD');
     let isWin = Math.random() > 0.42;
 
     batchTrades++;
 
-    if (isWin) {
-        wins++;
-        scanButton.textContent = `RESULT: WIN (+92%) | Exit: ${exitPrice}`;
-        scanButton.style.backgroundColor = "#2E7D32";
-    } else {
-        losses++;
-        scanButton.textContent = `RESULT: LOSS | Exit: ${exitPrice}`;
-        scanButton.style.backgroundColor = "#C62828";
+    if (scanButton) {
+        if (isWin) {
+            wins++;
+            scanButton.textContent = `RESULT: WIN (+92%) | Exit: ${exitPrice}`;
+            scanButton.style.backgroundColor = "#2E7D32";
+        } else {
+            losses++;
+            scanButton.textContent = `RESULT: LOSS | Exit: ${exitPrice}`;
+            scanButton.style.backgroundColor = "#C62828";
+        }
     }
 
-    batchCountDisplay.textContent = `${batchTrades}/10`;
-    winCountDisplay.textContent = wins;
+    if (batchCountDisplay) batchCountDisplay.textContent = `${batchTrades}/10`;
+    if (winCountDisplay) winCountDisplay.textContent = wins;
     if (lossCountDisplay) lossCountDisplay.textContent = losses;
     let winRate = batchTrades > 0 ? Math.round((wins / batchTrades) * 100) : 0;
-    accRateDisplay.textContent = winRate + "%";
+    if (accRateDisplay) accRateDisplay.textContent = winRate + "%";
     
     const outcomeElement = document.getElementById('resOutcome');
     if (outcomeElement) {
@@ -159,18 +246,22 @@ async function finalizeTradeOutcome(isBuySignal) {
             losses = 0;
         }
 
-        scanButton.textContent = "SCAN MARKET";
-        scanButton.style.backgroundColor = "#0277BD";
-        entryTimeDisplay.textContent = "Select Market & Scan";
-        signalDirection.textContent = "READY";
-        signalDirection.className = "signal-direction";
-        scoreNumber.textContent = "--";
-        patternLabel.textContent = "Engine: Ready";
-        fillBar.style.width = "0%";
+        if (scanButton) {
+            scanButton.textContent = "SCAN MARKET";
+            scanButton.style.backgroundColor = "#0277BD";
+        }
+        if (entryTimeDisplay) entryTimeDisplay.textContent = "Select Market & Scan";
+        if (signalDirection) {
+            signalDirection.textContent = "READY";
+            signalDirection.className = "signal-direction";
+        }
+        if (scoreNumber) scoreNumber.textContent = "--";
+        if (patternLabel) patternLabel.textContent = "Engine: Ready";
+        if (fillBar) fillBar.style.width = "0%";
 
         isLockedDown = false;
-        marketSelect.disabled = false;
-        timeframeSelect.disabled = false;
+        if (marketSelect) marketSelect.disabled = false;
+        if (timeframeSelect) timeframeSelect.disabled = false;
     }, 14000);
 }
 

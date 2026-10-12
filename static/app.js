@@ -16,8 +16,24 @@ let wins = 0;
 let losses = 0;
 let isLockedDown = false;
 
-// CHECK EXPIRATION & SESSION ON PAGE LOAD
+// CHECK EXPIRATION, SESSION & AUTOMATIC PAYPAL RETURN ON PAGE LOAD
 window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('access') === 'granted') {
+        const days = parseInt(urlParams.get('days')) || 30;
+        const expirationTime = new Date().getTime() + (days * 24 * 60 * 60 * 1000);
+
+        localStorage.setItem('bot_vip_active', 'true');
+        localStorage.setItem('bot_user_role', 'subscriber');
+        localStorage.setItem('bot_vip_expiry', expirationTime.toString());
+
+        // Clean URL parameters from the address bar
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        showDashboard(false);
+        return;
+    }
+
     checkSubscriptionStatus();
 };
 
@@ -61,8 +77,7 @@ function verifyVipCode() {
         return;
     }
 
-    // 2. DEMO / SUBSCRIBER KEYS (30-Day Plan Verification)
-    // You can generate custom subscriber keys like SUB30-8921 below
+    // 2. BACKUP SUBSCRIBER KEYS (Manual entry if needed)
     if (code.startsWith("SUB30-") || code.startsWith("SUB60-") || code.startsWith("SUB90-")) {
         let days = 30;
         if (code.startsWith("SUB60-")) days = 60;
